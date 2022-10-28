@@ -1,36 +1,19 @@
 const request = require('request');
 
-let name = "";
-
-if (process.argv.length > 3) {
-  name = process.argv[2] + " " + process.argv[3];
-} else {
-  name = process.argv[2];
-}
-
-const fetch = (breedName) => {
-  request('https://api.thecatapi.com/v1/breeds', function(error, response, body) {
-    if (error !== null) {
-      console.log('error:', error);
-      return;
+const fetchBreedDescription = (breedName, errorHandlerCallback) => {
+  request(`https://api.thecatapi.com/v1/breeds/search?q=${breedName}`, function(error, response, body) {
+    if (error) {
+      return errorHandlerCallback(error, null);
     }
     // console.log('statusCode:', response && response.statusCode);
     const catDataBase = JSON.parse(body);
-    searchByBreed(catDataBase, breedName);
+    const breed = catDataBase[0];
+    if (breed) {
+      errorHandlerCallback(null, breed.description);
+    } else {
+      errorHandlerCallback("Breed Not Found");
+    }
   });
 };
 
-const searchByBreed = (catData, nameOfCat) => {
-  for (const i in catData) {
-    let catName = nameOfCat.toLowerCase();
-    let dataBaseCatName = catData[i]['name'].toLowerCase();
-    if (catName === dataBaseCatName) {
-      console.log(catData[i]['description']);
-      return;
-    }
-  }
-  console.log("The requested breed is not found");
-};
-
-
-fetch(name);
+module.exports = { fetchBreedDescription };
